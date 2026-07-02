@@ -1,0 +1,23 @@
+{
+	"name": "periodic-calendar-page",
+	"version": "0.8.15",
+	"description": "Full-page periodic notes calendar for Obsidian",
+	"main": "main.js",
+	"type": "module",
+	"scripts": {
+		"dev": "node esbuild.config.mjs",
+		"build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
+		"build:vault": "tsc -noEmit -skipLibCheck && VAULT_PLUGIN_DIR=../../content/.obsidian/plugins/periodic-calendar-page node esbuild.config.mjs production"
+	},
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/KazooTTT/periodic-calendar-page.git"
+	},
+	"license": "MIT",
+	"devDependencies": {
+		"@types/node": "^22.15.17",
+		"esbuild": "0.25.5",
+		"obsidian": "latest",
+		"typescript": "^5.8.3"
+	}
+}
