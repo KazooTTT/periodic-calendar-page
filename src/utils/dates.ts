@@ -1,9 +1,12 @@
 import type { Moment } from 'moment';
 import type { IndexedNotes, Periodicity } from '../types';
 
-const GRANULARITY_UNIT: Record<Periodicity, 'day' | 'week' | 'month' | 'quarter' | 'year'> = {
+const GRANULARITY_UNIT: Record<
+	Periodicity,
+	'day' | 'isoWeek' | 'month' | 'quarter' | 'year'
+> = {
 	daily: 'day',
-	weekly: 'week',
+	weekly: 'isoWeek',
 	monthly: 'month',
 	quarterly: 'quarter',
 	yearly: 'year',

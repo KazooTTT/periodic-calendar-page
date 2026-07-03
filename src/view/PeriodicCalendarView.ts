@@ -473,6 +473,7 @@ export class PeriodicCalendarView extends ItemView {
 			periodicity,
 			date,
 			this.periodicSettings,
+			this.notes[periodicity],
 		);
 		await this.reindex();
 	}

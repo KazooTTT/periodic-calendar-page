@@ -74,7 +74,7 @@ VAULT_PLUGIN_DIR=/path/to/vault/.obsidian/plugins/periodic-calendar-page npm run
 | 问题 | 处理 |
 |------|------|
 | 日历为空 / 无标记 | 检查 Periodic Notes 是否启用，文件夹配置是否正确 |
-| 周报中文标题无法识别 | 插件已内置兜底解析；确认文件在 Periodic Notes 配置的周报目录 |
+| 周期笔记无法识别 / 日历无标记 | ① 确认 Periodic Notes 文件夹配置正确；② 检查 frontmatter 是否有 `date` 和 `slug`（最稳妥）；③ 插件内置四级回落（format → 备用文件名 → 中文标题正则 → frontmatter） |
 | 统计只有部分年份 | 统计仅计入**有日记文件**的年份 |
 | BRAT 安装后无法启用 | 确认仓库根目录存在 `main.js`（需 release 或 main 分支已提交构建产物） |
 

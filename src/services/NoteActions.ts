@@ -74,11 +74,65 @@ async function resolveNotePath(
 	return normalizedPath;
 }
 
+const ISO_WEEKLY_BASENAME = /^\d{4}-W\d{1,2}$/i;
+
+function findRenamedWeeklyInIndex(
+	app: App,
+	indexedNotes: Record<string, TFile>,
+	anchorDate: Moment,
+): TFile | null {
+	const weekYear = anchorDate.isoWeekYear();
+	const weekNum = anchorDate.isoWeek();
+
+	for (const file of Object.values(indexedNotes)) {
+		if (ISO_WEEKLY_BASENAME.test(file.basename)) {
+			continue;
+		}
+
+		const cache = app.metadataCache.getFileCache(file);
+		const slug = cache?.frontmatter?.slug;
+		if (typeof slug === 'string') {
+			const weekMatch = /W(\d{1,2})$/i.exec(slug);
+			const yearMatch = /^(\d{4})/.exec(slug);
+			if (
+				weekMatch &&
+				yearMatch &&
+				Number(yearMatch[1]) === weekYear &&
+				Number(weekMatch[1]) === weekNum
+			) {
+				return file;
+			}
+		}
+	}
+
+	return null;
+}
+
+export function getPeriodicAnchorDate(
+	periodicity: Periodicity,
+	date: Moment,
+): Moment {
+	if (periodicity === 'monthly') {
+		return date.clone().endOf('month');
+	}
+	if (periodicity === 'quarterly') {
+		return date.clone().endOf('quarter');
+	}
+	if (periodicity === 'yearly') {
+		return date.clone().endOf('year');
+	}
+	if (periodicity === 'weekly') {
+		return date.clone().startOf('isoWeek');
+	}
+	return date.clone().startOf('day');
+}
+
 export async function openOrCreatePeriodicNote(
 	app: App,
 	periodicity: Periodicity,
 	date: Moment,
 	settings: PeriodicNotesSettings,
+	indexedNotes?: Record<string, TFile>,
 ): Promise<TFile | null> {
 	const config = settings[periodicity];
 	if (!config.enabled) {
@@ -90,20 +144,44 @@ export async function openOrCreatePeriodicNote(
 		return null;
 	}
 
-	const anchorDate =
-		periodicity === 'monthly'
-			? date.clone().endOf('month')
-			: periodicity === 'quarterly'
-				? date.clone().endOf('quarter')
-				: periodicity === 'yearly'
-					? date.clone().endOf('year')
-					: periodicity === 'weekly'
-						? date.clone().startOf('week')
-						: date.clone().startOf('day');
+	const anchorDate = getPeriodicAnchorDate(periodicity, date);
+
+	if (indexedNotes) {
+		const uid = getDateUid(anchorDate, periodicity);
+		const indexed = indexedNotes[uid];
+		if (indexed) {
+			await app.workspace.getLeaf(false).openFile(indexed);
+			return indexed;
+		}
+
+		if (periodicity === 'weekly') {
+			const renamedWeekly = findRenamedWeeklyInIndex(
+				app,
+				indexedNotes,
+				anchorDate,
+			);
+			if (renamedWeekly) {
+				await app.workspace.getLeaf(false).openFile(renamedWeekly);
+				return renamedWeekly;
+			}
+		}
+	}
 
 	const filename = anchorDate.format(config.format);
 	const path = await resolveNotePath(app, config.folder, filename);
 	const existing = app.vault.getAbstractFileByPath(path);
+
+	if (existing instanceof TFile && periodicity === 'weekly' && indexedNotes) {
+		const renamedWeekly = findRenamedWeeklyInIndex(
+			app,
+			indexedNotes,
+			anchorDate,
+		);
+		if (renamedWeekly) {
+			await app.workspace.getLeaf(false).openFile(renamedWeekly);
+			return renamedWeekly;
+		}
+	}
 
 	if (existing instanceof TFile) {
 		await app.workspace.getLeaf(false).openFile(existing);

@@ -51,6 +51,19 @@ export class NoteIndexer {
 			}
 
 			const uid = getDateUid(date, periodicity);
+			const existing = notes[uid];
+			if (existing && periodicity === 'weekly') {
+				const isoWeeklyName = /^\d{4}-W\d{1,2}$/i;
+				const existingIsIso = isoWeeklyName.test(existing.basename);
+				const incomingIsIso = isoWeeklyName.test(node.basename);
+				if (existingIsIso && !incomingIsIso) {
+					notes[uid] = node;
+					return;
+				}
+				if (!existingIsIso) {
+					return;
+				}
+			}
 			notes[uid] = node;
 		});
 
